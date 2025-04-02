@@ -1,0 +1,77 @@
+name: Build and Release nopop.exe
+
+on:
+  push:
+    tags:
+      - 'v*'  # 仅在 push 以 "v" 开头的 tag（如 v1.0.0）时触发
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    name: Build Executable
+    runs-on: windows-latest  # 使用 Windows 进行打包
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'  # 选择适合你的 Python 版本
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build executable
+        run: |
+          pyinstaller --onefile --noconsole nopop.py
+
+      - name: Rename and Move EXE
+        run: |
+          mkdir release
+          mv dist/nopop.exe release/nopop.exe
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: "Auto Builded Release - nopop.exe"
+          draft: false
+          prerelease: false
+
+      - name: Upload nopop.exe to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release/nopop.exe
+          asset_name: nopop.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Source Code (ZIP)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/source_code.zip
+          asset_name: SourceCode.zip
+          asset_content_type: application/zip
+
+      - name: Upload Source Code (TAR.GZ)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/source_code.tar.gz
+          asset_name: SourceCode.tar.gz
+          asset_content_type: application/gzip
