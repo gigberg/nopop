@@ -55,23 +55,3 @@ jobs:
           asset_path: release/nopop.exe
           asset_name: nopop.exe
           asset_content_type: application/octet-stream
-
-      - name: Upload Source Code (ZIP)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/source_code.zip
-          asset_name: SourceCode.zip
-          asset_content_type: application/zip
-
-      - name: Upload Source Code (TAR.GZ)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/source_code.tar.gz
-          asset_name: SourceCode.tar.gz
-          asset_content_type: application/gzip
