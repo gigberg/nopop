@@ -107,6 +107,8 @@ else if(!lstrcmpi("/HID", argv[i])) a->sw_state = SW_HIDE;
 RetVal = (int) ShellExecute(NULL, NULL, a->file, a->params, NULL, a->sw_state);
 
 ```
+However, it seems that using `cmdow /run /hide` **still triggers a brief "splash" cmd window**, which may not behave as expected.
+
 3. [runapp](https://github.com/futurist/runapp) 
 Runapp dedicates to run windows application using config file, instead of shortcuts, which is only 15.08 KB. Command example: 
 `Runapp config.arg`
