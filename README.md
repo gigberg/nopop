@@ -22,7 +22,7 @@ This tool is primarily designed to work with other programs as a middleware and 
 
 ```bash
 # for Listary Actions
-nohup.exe echo "(action_path)"|sed -e s\#/#g | clip
+nohup.exe echo "(action_path)"| sed -e s\#/#g | clip
 
 # for Everything Context Menu
 Not available yet. See also: [A UI to customize these commands is still on my TODO list](https://www.voidtools.com/forum/viewtopic.php?t=11399)
@@ -36,7 +36,7 @@ nohop.exe powershell -NoProfile -Command "$path='%FILEPATH1%'; $path -replace '\
 -  working with scoop shim add (As a alternative to bat2exe program, which also block popup, by convert bat to exe file instead)
 
 ```batch
-nopop.exe
+scoop shim add wcmd nopop "wt.exe -p CMD"
 ```
 
 
@@ -55,16 +55,15 @@ pyinstaller --onefile --noconsole nopop.py
 
 The shell feature is kept by using the subprocess module with `shell=True` option to run the command in the background without displaying a console window. This allows the user to interact with the command prompt as if they were running the command directly, while the tool handles the execution in the background.
 
-
 # Why this avoids pop window?
 
 pyinstaller with --noconsole is used for GUI applications to prevent a console window from appearing when the executable is run.
+
 
 ```python
 if is_win or is_darwin:
 	if not self.console:
 		exe = exe + 'w'
-   
 ```
 Source:[PyInstaller](https://github.com/pyinstaller/pyinstaller/blob/919022fa471238de7fb832c81f6c1334b79604ab/PyInstaller/building/api.py#L732-L734)
 
@@ -73,6 +72,17 @@ Source:[PyInstaller](https://github.com/pyinstaller/pyinstaller/blob/919022fa471
 > You can also make all .py scripts execute with pythonw.exe, setting this through the usual facilities, for example (might require administrative rights):
 
 Source: [3. Using Python on Windows → 3.3.4. Executing scripts](https://docs.python.org/2/using/windows.html#executing-scripts)
+
+```plain
+> pyinstall -h
+Windows and macOS specific options:
+  -c, --console, --nowindowed
+                        Open a console window for standard i/o (default). On Windows this option has no effect if the first script is a '.pyw' file.
+  -w, --windowed, --noconsole
+                        Windows and macOS: do not provide a console window for standard i/o (__Which means print() will not take effect, so ctypes.windll.user32.MessageBoxW() is used to display GUI messages instead.__). On macOS this also triggers building a macOS .app bundle. On Windows this option is automatically set if the first script is a '.pyw' file. This option is ignored on *NIX systems.
+  --hide-console {hide-early,minimize-late,hide-late,minimize-early}
+                        Windows only: in console-enabled executable, have bootloader automatically hide or minimize the console window if the program owns the console window (i.e., was not launched from an existing console window).
+```
 
 # Other similar tools
 
@@ -95,7 +105,7 @@ An example running 'Demo.cmd' with invisible.vbs
 `script.exe "invisible.vbs" "foo.cmd" "bar.cmd"//nologo`
 
 2. [cmdow](https://github.com/ritchielawrence/cmdow)
-Cmdow is a win32 console application for manipulating program windows, which is only 86.5 KB. Command example: 
+Cmdow is a win32 console application for manipulating program windows, which is only 86.5 KB. Command example:
 `cmdow /run /hid foo.bat arg1 "arg 2"`
 
 Cmdow use .Net Framwork's ShellExecute() function to hide console window, the related code is as follow:
@@ -109,8 +119,8 @@ RetVal = (int) ShellExecute(NULL, NULL, a->file, a->params, NULL, a->sw_state);
 ```
 However, it seems that using `cmdow /run /hide` **still triggers a brief "splash" cmd window**, which may not behave as expected.
 
-3. [runapp](https://github.com/futurist/runapp) 
-Runapp dedicates to run windows application using config file, instead of shortcuts, which is only 15.08 KB. Command example: 
+3. [runapp](https://github.com/futurist/runapp)
+Runapp dedicates to run windows application using config file, instead of shortcuts, which is only 15.08 KB. Command example:
 `Runapp config.arg`
 
 the file config.arg's content is:'
@@ -139,7 +149,7 @@ myProcess.StartInfo = startInfo;
 
    > [@cqjjjzr](https://github.com/cqjjjzr) in [kiennq/scoop-better-shimexe#3 (comment)](https://github.com/kiennq/scoop-better-shimexe/pull/3#issue-1185754616) says "a blank console window ... may be suppressed via CREATE_NO_WINDOW creation flag, but I don't know if it would break other things.."
    >
-   > 
+   >
    >
    > Nope, the console window is created as a result of double clicking on the *shim* (which is a console app). The shim can close the console window via `FreeConsole` (which it does) but it can't prevent the OS opening that console window, at least briefly, without being a GUI app (which wouldn't work as a shim for a console app, which is the normal case). [see as.](https://github.com/ScoopInstaller/Scoop/issues/1606#issuecomment-1166297998)
 
@@ -150,7 +160,7 @@ myProcess.StartInfo = startInfo;
 ```powershell
 switch ($SubCommand) {
     'add' {
-    
+
     $target_subsystem = Get-PESubsystem $resolved_path
             if ($target_subsystem -eq 2) { # we only want to make shims GUI
                 Write-Output "Making $shim.exe a GUI binary."
@@ -173,7 +183,7 @@ int wmain(int argc, wchar_t* argv[])
 
     // Find out if the target program is a console app
     PathUnquoteSpacesW(unquotedPath); //Removes quotes from the beginning and end of a path.
-    
+
     const auto ret = SHGetFileInfoW(unquotedPath, -1, &sfi, sizeof(sfi), SHGFI_EXETYPE);
 
     if (ret == 0)
@@ -207,7 +217,7 @@ scoop shim add <shim_name> <command_path> [<args>...]
 ```powershell
 switch ($SubCommand) {
     'add' {
-    
+
 if ($commandPath -notmatch '[\\/]') {
     $shortPath = $commandPath
     $commandPath = Get-ShimTarget (Get-ShimPath $shortPath $global)
@@ -227,9 +237,9 @@ function shim($path, $global, $name, $arg) {
     $shim = "$abs_shimdir\$($name.tolower())"
 
     if ($path -match '\.(exe|com)$') {
-    
+
         Copy-Item (get_shim_path) "$shim.exe" -Force
-        
+
         if ($arg) {
             Write-Output "args = $arg" | Out-UTF8File "$shim.shim" -Append
         }
@@ -260,7 +270,7 @@ int wmain(int argc, wchar_t* argv[])
     // Create job object, which can be attached to child processes
     // to make sure they terminate when the parent terminates as well.
     auto [processHandle, threadHandle] = MakeProcess({path, args});
-    
+
 ```
 
 - How `MakeProcess()` function works
@@ -280,13 +290,13 @@ std::tuple<std::unique_handle, std::unique_handle> MakeProcess(ShimInfo const& i
     cmd[path->size() + 1 + args->size()] = L'\0';
 
     if (CreateProcessW(nullptr, cmd.data(), nullptr, nullptr, TRUE, CREATE_SUSPENDED, nullptr, nullptr, &si, &pi)) // CREATE_NO_WINDOW flag only useful for console application
-        
+
     else
     {
         if (GetLastError() == ERROR_ELEVATION_REQUIRED)
         {
             // We must elevate the process, which is (basically) impossible with CreateProcess, and therefore we fallback to ShellExecuteEx, which CAN create elevated processes, at the cost of opening a new separate window.
-            
+
             SHELLEXECUTEINFOW sei = {};
             if (!ShellExecuteExW(&sei))
 
@@ -301,14 +311,14 @@ std::tuple<std::unique_handle, std::unique_handle> MakeProcess(ShimInfo const& i
     {
         fprintf(stderr, "Shim: Could not set control handler; Ctrl-C behavior may be invalid.\n");
     }
-        
+
 BOOL WINAPI CtrlHandler(DWORD ctrlType)
 {
     switch (ctrlType)
     {
     // Ignore all events, and let the child process
     // handle them.
-    
+
 ```
 
 Due to that scoop shim deals with arguments from `$target.shim` and `command line` by string concatenate `args->append(cmd + wcslen(argv[0]))`, **scoop shim cannot keep pipe(|), redirect(>) and so many other shell features**.
@@ -318,7 +328,7 @@ int wmain(int argc, wchar_t* argv[])
 {
     auto [path, args] = GetShimInfo();
 
-    
+
      // retrieves the command line string
     auto cmd = GetCommandLineW();
     if (cmd[0] == L'\"')
@@ -334,9 +344,9 @@ int wmain(int argc, wchar_t* argv[])
     // Create job object, which can be attached to child processes
     // to make sure they terminate when the parent terminates as well.
     auto [processHandle, threadHandle] = MakeProcess({path, args});
-    
+
 ```
-appendix scoop shim source code: 
+appendix scoop shim source code:
 ```cpp
 ShimInfo GetShimInfo()
 {
