@@ -41,6 +41,20 @@ jobs:
           $hash = Get-FileHash -Algorithm SHA256 release\nopop.exe
           echo "HASH=$($hash.Hash)" >> $env:GITHUB_ENV
 
+      - name: Extract changelog for current tag
+        id: changelog
+        shell: bash
+        run: |
+          tag="${{ github.ref_name }}"
+          # ${tag//./\\.} subsitute dot to escaped dot,
+          # flag, bool filter to mark lines to extract,
+          # / Sentence separator, if match flag=1 and skip_to_next, start readline, else match flag=0, end readline,
+          # \\[, \\], \\. double escaped character,
+          awk "/^## \\[${tag//./\\.}\\]/ {flag=1; next} /^## \\[/ {flag=0} flag" CHANGELOG.md > release_notes.txt
+          echo "RELEASE_BODY<<EOF" >> $GITHUB_ENV
+          cat release_notes.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -50,6 +64,9 @@ jobs:
           tag_name: ${{ github.ref_name }}
           release_name: Release ${{ github.ref_name }}
           body: |
+            ${{ env.RELEASE_BODY }}
+
+            ---
             SHA256: `${{ env.HASH }}`
           draft: false
           prerelease: false
